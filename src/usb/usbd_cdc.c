@@ -667,8 +667,11 @@ static uint8_t  USBD_CDC_DataIn (USBD_HandleTypeDef *pdev, uint8_t epnum)
   
   if(pdev->pClassData != NULL)
   {
-    
+      
     hcdc->TxState = 0;
+
+      /* XXX Added by MPL */
+      ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->TxComplete();
 
     return USBD_OK;
   }
@@ -859,7 +862,7 @@ uint8_t  USBD_CDC_TransmitPacket(USBD_HandleTypeDef *pdev)
                        CDC_IN_EP,
                        hcdc->TxBuffer,
                        hcdc->TxLength);
-      
+
       return USBD_OK;
     }
     else
