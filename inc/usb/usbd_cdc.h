@@ -114,7 +114,7 @@ typedef struct
   uint8_t  CmdOpCode;
   uint8_t  CmdLength;    
   uint8_t  *RxBuffer;  
-  uint8_t  *TxBuffer;   
+  const uint8_t  *TxBuffer;   
   uint32_t RxLength;
   uint32_t TxLength;    
   
@@ -150,7 +150,7 @@ uint8_t  USBD_CDC_RegisterInterface  (USBD_HandleTypeDef   *pdev,
                                       USBD_CDC_ItfTypeDef *fops);
 
 uint8_t  USBD_CDC_SetTxBuffer        (USBD_HandleTypeDef   *pdev,
-                                      uint8_t  *pbuff,
+                                      const uint8_t  *pbuff,
                                       uint16_t length);
 
 uint8_t  USBD_CDC_SetRxBuffer        (USBD_HandleTypeDef   *pdev,

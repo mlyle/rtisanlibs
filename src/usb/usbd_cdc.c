@@ -811,7 +811,7 @@ uint8_t  USBD_CDC_RegisterInterface  (USBD_HandleTypeDef   *pdev,
   * @retval status
   */
 uint8_t  USBD_CDC_SetTxBuffer  (USBD_HandleTypeDef   *pdev,
-                                uint8_t  *pbuff,
+                                const uint8_t  *pbuff,
                                 uint16_t length)
 {
   USBD_CDC_HandleTypeDef   *hcdc = (USBD_CDC_HandleTypeDef*) pdev->pClassData;
