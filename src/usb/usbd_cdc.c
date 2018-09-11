@@ -131,6 +131,8 @@ static uint8_t  *USBD_CDC_GetOtherSpeedCfgDesc (uint16_t *length);
 
 uint8_t  *USBD_CDC_GetDeviceQualifierDescriptor (uint16_t *length);
 
+void *ctxPointers[2];
+
 /* USB Standard Device Descriptor */
 __ALIGN_BEGIN static uint8_t USBD_CDC_DeviceQualifierDesc[USB_LEN_DEV_QUALIFIER_DESC] __ALIGN_END =
 {
@@ -525,7 +527,8 @@ static uint8_t  USBD_CDC_Init (USBD_HandleTypeDef *pdev,
     hcdc = (USBD_CDC_HandleTypeDef*) pdev->pClassData;
     
     /* Init  physical Interface components */
-    ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->Init();
+    ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->Init(0, ctxPointers + 0);
+    ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->Init(1, ctxPointers + 1);
     
     /* Init Xfer states */
     hcdc->TxState =0;
@@ -581,7 +584,8 @@ static uint8_t  USBD_CDC_DeInit (USBD_HandleTypeDef *pdev,
   /* DeInit  physical Interface components */
   if(pdev->pClassData != NULL)
   {
-    ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->DeInit();
+    ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->DeInit(ctxPointers[0]);
+    ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->DeInit(ctxPointers[1]);
     USBD_free(pdev->pClassData);
     pdev->pClassData = NULL;
   }
@@ -599,6 +603,9 @@ static uint8_t  USBD_CDC_DeInit (USBD_HandleTypeDef *pdev,
 static uint8_t  USBD_CDC_Setup (USBD_HandleTypeDef *pdev, 
                                 USBD_SetupReqTypedef *req)
 {
+	/* XXX instance handling */
+  int instance = 0;
+
   USBD_CDC_HandleTypeDef   *hcdc = (USBD_CDC_HandleTypeDef*) pdev->pClassData;
   static uint8_t ifalt = 0;
     
@@ -609,9 +616,8 @@ static uint8_t  USBD_CDC_Setup (USBD_HandleTypeDef *pdev,
     {
       if (req->bmRequest & 0x80)
       {
-        ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->Control(req->bRequest,
-                                                          (uint8_t *)hcdc->data,
-                                                          req->wLength);
+        ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->Control(ctxPointers[instance],
+			req->bRequest, (uint8_t *)hcdc->data, req->wLength);
           USBD_CtlSendData (pdev, 
                             (uint8_t *)hcdc->data,
                             req->wLength);
@@ -629,7 +635,8 @@ static uint8_t  USBD_CDC_Setup (USBD_HandleTypeDef *pdev,
     }
     else
     {
-      ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->Control(req->bRequest,
+      ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->Control(ctxPointers[instance],
+	                                                req->bRequest,
                                                         (uint8_t*)req,
                                                         0);
     }
@@ -663,6 +670,7 @@ static uint8_t  USBD_CDC_Setup (USBD_HandleTypeDef *pdev,
   */
 static uint8_t  USBD_CDC_DataIn (USBD_HandleTypeDef *pdev, uint8_t epnum)
 {
+  int instance = 0;	/* XXX instance */
   USBD_CDC_HandleTypeDef   *hcdc = (USBD_CDC_HandleTypeDef*) pdev->pClassData;
   
   if(pdev->pClassData != NULL)
@@ -671,7 +679,7 @@ static uint8_t  USBD_CDC_DataIn (USBD_HandleTypeDef *pdev, uint8_t epnum)
     hcdc->TxState = 0;
 
       /* XXX Added by MPL */
-      ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->TxComplete();
+      ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->TxComplete(ctxPointers[instance]);
 
     return USBD_OK;
   }
@@ -689,7 +697,8 @@ static uint8_t  USBD_CDC_DataIn (USBD_HandleTypeDef *pdev, uint8_t epnum)
   * @retval status
   */
 static uint8_t  USBD_CDC_DataOut (USBD_HandleTypeDef *pdev, uint8_t epnum)
-{      
+{
+  int instance = 0;	/* XXX instance */
   USBD_CDC_HandleTypeDef   *hcdc = (USBD_CDC_HandleTypeDef*) pdev->pClassData;
   
   /* Get the received data length */
@@ -699,7 +708,7 @@ static uint8_t  USBD_CDC_DataOut (USBD_HandleTypeDef *pdev, uint8_t epnum)
   NAKed till the end of the application Xfer */
   if(pdev->pClassData != NULL)
   {
-    ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->Receive(hcdc->RxBuffer, &hcdc->RxLength);
+    ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->Receive(ctxPointers[instance], hcdc->RxBuffer, &hcdc->RxLength);
 
     return USBD_OK;
   }
@@ -720,11 +729,13 @@ static uint8_t  USBD_CDC_DataOut (USBD_HandleTypeDef *pdev, uint8_t epnum)
   */
 static uint8_t  USBD_CDC_EP0_RxReady (USBD_HandleTypeDef *pdev)
 { 
+  int instance = 0;	/* XXX instance */
   USBD_CDC_HandleTypeDef   *hcdc = (USBD_CDC_HandleTypeDef*) pdev->pClassData;
   
   if((pdev->pUserData != NULL) && (hcdc->CmdOpCode != 0xFF))
   {
-    ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->Control(hcdc->CmdOpCode,
+    ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->Control(ctxPointers[instance],
+	    					hcdc->CmdOpCode,
                                                       (uint8_t *)hcdc->data,
                                                       hcdc->CmdLength);
       hcdc->CmdOpCode = 0xFF; 
