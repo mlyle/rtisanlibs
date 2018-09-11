@@ -103,6 +103,8 @@
   * @{
   */
 
+#include <cdc_descriptor.h>
+
 
 static uint8_t  USBD_CDC_Init (USBD_HandleTypeDef *pdev, 
                                uint8_t cfgidx);
@@ -124,8 +126,6 @@ static uint8_t  USBD_CDC_EP0_RxReady (USBD_HandleTypeDef *pdev);
 static uint8_t  *USBD_CDC_GetFSCfgDesc (uint16_t *length);
 
 static uint8_t  *USBD_CDC_GetHSCfgDesc (uint16_t *length);
-
-static uint8_t  *USBD_CDC_GetOtherSpeedCfgDesc (uint16_t *length);
 
 static uint8_t  *USBD_CDC_GetOtherSpeedCfgDesc (uint16_t *length);
 
@@ -176,6 +176,7 @@ USBD_ClassTypeDef  USBD_CDC =
   USBD_CDC_GetDeviceQualifierDescriptor,
 };
 
+#if 0
 /* USB CDC device Configuration Descriptor */
 __ALIGN_BEGIN uint8_t USBD_CDC_CfgHSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
 {
@@ -270,7 +271,6 @@ __ALIGN_BEGIN uint8_t USBD_CDC_CfgHSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
   HIBYTE(CDC_DATA_HS_MAX_PACKET_SIZE),
   0x00                               /* bInterval: ignore for Bulk transfer */
 } ;
-
 
 /* USB CDC device Configuration Descriptor */
 __ALIGN_BEGIN uint8_t USBD_CDC_CfgFSDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIGN_END =
@@ -458,6 +458,7 @@ __ALIGN_BEGIN uint8_t USBD_CDC_OtherSpeedCfgDesc[USB_CDC_CONFIG_DESC_SIZ] __ALIG
   0x00,
   0x00                              /* bInterval */
 };
+#endif
 
 /**
   * @}
@@ -753,8 +754,8 @@ static uint8_t  USBD_CDC_EP0_RxReady (USBD_HandleTypeDef *pdev)
   */
 static uint8_t  *USBD_CDC_GetFSCfgDesc (uint16_t *length)
 {
-  *length = sizeof (USBD_CDC_CfgFSDesc);
-  return USBD_CDC_CfgFSDesc;
+  *length = sizeof (IADCDCTwoDescriptor);
+  return (uint8_t *) IADCDCTwoDescriptor;
 }
 
 /**
@@ -766,8 +767,11 @@ static uint8_t  *USBD_CDC_GetFSCfgDesc (uint16_t *length)
   */
 static uint8_t  *USBD_CDC_GetHSCfgDesc (uint16_t *length)
 {
-  *length = sizeof (USBD_CDC_CfgHSDesc);
-  return USBD_CDC_CfgHSDesc;
+  *length = 0;
+  return NULL;
+
+  //*length = sizeof (USBD_CDC_CfgHSDesc);
+  //return USBD_CDC_CfgHSDesc;
 }
 
 /**
@@ -779,8 +783,8 @@ static uint8_t  *USBD_CDC_GetHSCfgDesc (uint16_t *length)
   */
 static uint8_t  *USBD_CDC_GetOtherSpeedCfgDesc (uint16_t *length)
 {
-  *length = sizeof (USBD_CDC_OtherSpeedCfgDesc);
-  return USBD_CDC_OtherSpeedCfgDesc;
+  *length = sizeof (IADCDCTwoDescriptor);
+  return (uint8_t *) IADCDCTwoDescriptor;
 }
 
 /**
