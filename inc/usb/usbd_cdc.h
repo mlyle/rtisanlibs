@@ -118,6 +118,7 @@ typedef struct
   uint32_t data[CDC_DATA_HS_MAX_PACKET_SIZE/4];      /* Force 32bits alignment */
   uint8_t  CmdOpCode;
   uint8_t  CmdLength;
+  uint8_t  ctrlInst;
   uint8_t  *RxBuffer[NUM_CDC_INSTANCES];
   const uint8_t  *TxBuffer[NUM_CDC_INSTANCES];   
   uint32_t RxLength[NUM_CDC_INSTANCES];

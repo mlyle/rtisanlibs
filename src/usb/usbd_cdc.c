@@ -357,10 +357,16 @@ static uint8_t  USBD_CDC_DeInit (USBD_HandleTypeDef *pdev,
 static uint8_t  USBD_CDC_Setup (USBD_HandleTypeDef *pdev, 
                                 USBD_SetupReqTypedef *req)
 {
-	/* XXX instance handling-- how on this one */
   int instance = 0;
 
+  if ((req->wIndex == USB_CDC_CIF_NUM1) ||
+		  (req->wIndex == USB_CDC_DIF_NUM1)) {
+	  instance = 1;
+  }
+
   USBD_CDC_HandleTypeDef   *hcdc = (USBD_CDC_HandleTypeDef*) pdev->pClassData;
+  hcdc->ctrlInst = instance;
+
   static uint8_t ifalt = 0;
     
   switch (req->bmRequest & USB_REQ_TYPE_MASK)
@@ -435,7 +441,6 @@ static uint8_t  USBD_CDC_DataIn (USBD_HandleTypeDef *pdev, uint8_t epnum)
       
     hcdc->TxState[instance] = 0;
 
-      /* XXX Added by MPL */
       ((USBD_CDC_ItfTypeDef *)pdev->pUserData)->TxComplete(ctxPointers[instance]);
 
     return USBD_OK;
@@ -489,10 +494,9 @@ static uint8_t  USBD_CDC_DataOut (USBD_HandleTypeDef *pdev, uint8_t epnum)
   * @retval status
   */
 static uint8_t  USBD_CDC_EP0_RxReady (USBD_HandleTypeDef *pdev)
-{ 
-  int instance = 0;	/* XXX instance HOW ON THIS ONE */
-  /* XXX need to understand htis better, data, cmdlength, opcode, all shared */
+{
   USBD_CDC_HandleTypeDef   *hcdc = (USBD_CDC_HandleTypeDef*) pdev->pClassData;
+  int instance = hcdc->ctrlInst;
   
   if((pdev->pUserData != NULL) && (hcdc->CmdOpCode != 0xFF))
   {
